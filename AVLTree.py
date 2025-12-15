@@ -19,10 +19,17 @@ class AVLNode(object):
 	def __init__(self, key, value):
 		self.key = key
 		self.value = value
-		self.left = None
-		self.right = None
+		if key is not None:
+			self.left = AVLNode(None, None)
+			self.right = AVLNode(None, None)
+			self.left.parent = self
+			self.right.parent = self
+			self.height = 0 
+		else:
+			self.left = None
+			self.right = None
+			self.height = -1 
 		self.parent = None
-		self.height = -1
 		
 
 	"""returns whether self is not a virtual node 
@@ -31,7 +38,7 @@ class AVLNode(object):
 	@returns: False if self is a virtual node, True otherwise.
 	"""
 	def is_real_node(self):
-		return False
+		return self.key is not None
 
 
 """
@@ -44,7 +51,9 @@ class AVLTree(object):
 	Constructor, you are allowed to add more fields.
 	"""
 	def __init__(self):
-		self.root = None
+		self.root = AVLNode(None, None)
+		self.max = None
+
 
 
 	"""searches for a node in the dictionary corresponding to the key (starting at the root)
@@ -56,6 +65,16 @@ class AVLTree(object):
 	and e is the number of edges on the path between the starting node and ending node+1.
 	"""
 	def search(self, key):
+		node = self.root
+		edges = 0
+		while node.is_real_node():
+			if key == node.key:
+				return node, edges + 1
+			elif key < node.key:
+				node = node.left
+			else:
+				node = node.right
+			edges += 1
 		return None, -1
 
 
@@ -68,7 +87,35 @@ class AVLTree(object):
 	and e is the number of edges on the path between the starting node and ending node+1.
 	"""
 	def finger_search(self, key):
+		node = self.max
+		edges = 0
+
+		if not node.is_real_node() or node is None:
+			return None, -1
+		if key > node.key:
+			return None, -1
+		if key == node.key:
+			return node, 1
+		
+		while node.parent is not None and node.parent.is_real_node():
+			if key > node.parent.key:
+				break
+			node = node.parent
+			edges += 1
+			if key == node.key:
+				return node, edges + 1
+			
+		while node.is_real_node():
+			if key == node.key:
+				return node, edges + 1
+			elif key < node.key:
+				node = node.left
+			else:
+				node = node.right
+			edges += 1
+
 		return None, -1
+
 
 
 	"""inserts a new node into the dictionary with corresponding key and value (starting at the root)
