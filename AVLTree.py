@@ -130,8 +130,118 @@ class AVLTree(object):
 	e is the number of edges on the path between the starting node and new node before rebalancing,
 	and h is the number of PROMOTE cases during the AVL rebalancing
 	"""
+
+	def _update_height(self, node):
+		node.height = 1 + max(node.left.height, node.right.height)
+
+	def _balance_factor(self, node):
+		return node.left.height - node.right.height
+	
+	def _rotate_left(self, x):
+		y = x.right
+		x.right = y.left
+		if y.left.is_real_node():
+			y.left.parent = x
+
+		y.parent = x.parent
+		if x.parent is None:
+			self.root = y
+		elif x == x.parent.left:
+			x.parent.left = y
+		else:
+			x.parent.right = y
+
+		y.left = x
+		x.parent = y
+
+		self._update_height(x)
+		self._update_height(y)
+
+	def _rotate_right(self, x):
+		y = x.left
+		x.left = y.right
+		if y.right.is_real_node():
+			y.right.parent = x
+
+		y.parent = x.parent
+		if x.parent is None:
+			self.root = y
+		elif x == x.parent.right:
+			x.parent.right = y
+		else:
+			x.parent.left = y
+
+		y.right = x
+		x.parent = y
+
+		self._update_height(x)
+		self._update_height(y)
+
+	def _rebalance(self, node):
+		promotes = 0
+
+		while node is not None:
+			old_height = node.height
+			self._update_height(node)
+
+			if node.height > old_height:
+				promotes += 1
+
+			bf = self._balance_factor(node)
+
+			# Left heavy
+			if bf == 2:
+				if self._balance_factor(node.left) < 0:
+					self._rotate_left(node.left)
+				self._rotate_right(node)
+				break
+
+			# Right heavy
+			if bf == -2:
+				if self._balance_factor(node.right) > 0:
+					self._rotate_right(node.right)
+				self._rotate_left(node)
+				break
+
+			node = node.parent
+
+		return promotes
+
+
 	def insert(self, key, val):
-		return None, -1, -1
+		if not self.root.is_real_node():
+			self.root = AVLNode(key, val)
+			self.max = self.root
+			return self.root, 0, 0
+
+		node = self.root
+		parent = None
+		edges = 0
+
+		while node.is_real_node():
+			parent = node
+			edges += 1
+			if key < node.key:
+				node = node.left
+			else:
+				node = node.right
+
+		new_node = AVLNode(key, val)
+		new_node.parent = parent
+
+		if key < parent.key:
+			parent.left = new_node
+		else:
+			parent.right = new_node
+
+		# update max
+		if self.max is None or key > self.max.key:
+			self.max = new_node
+
+		promotes = self._rebalance(parent)
+
+		return new_node, edges, promotes
+
 
 
 	"""inserts a new node into the dictionary with corresponding key and value, starting at the max
@@ -147,7 +257,45 @@ class AVLTree(object):
 	and h is the number of PROMOTE cases during the AVL rebalancing
 	"""
 	def finger_insert(self, key, val):
-		return None, -1, -1
+		if self.max is None or not self.max.is_real_node():
+			self.root = AVLNode(key, val)
+			self.max = self.root
+			return self.root, 0, 0
+
+		node = self.max
+		edges = 0
+
+		# climb up
+		while node.parent is not None and key < node.parent.key:
+			node = node.parent
+			edges += 1
+
+		# descend
+		current = node
+		while current.is_real_node():
+			parent = current
+			edges += 1
+			if key < current.key:
+				current = current.left
+			else:
+				current = current.right
+
+		new_node = AVLNode(key, val)
+		new_node.parent = parent
+
+		if key < parent.key:
+			parent.left = new_node
+		else:
+			parent.right = new_node
+
+		# update max
+		if key > self.max.key:
+			self.max = new_node
+
+		promotes = self._rebalance(parent)
+
+		return new_node, edges, promotes
+
 
 
 	"""deletes node from the dictionary
