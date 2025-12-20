@@ -25,12 +25,10 @@ class AVLNode(object):
 			self.left.parent = self
 			self.right.parent = self
 			self.height = 0
-			self.size = 1
 		else:
 			self.left = None
 			self.right = None
 			self.height = -1
-			self.size = 0
 		self.parent = None
 
 
@@ -81,15 +79,13 @@ class AVLTree(object):
 	def __init__(self):
 		self.root = AVLNode(None, None)
 		self.max = None
+		self.size = 0
 
 
 	# custom functions
 	# עדיף להעביר לNodeAVL ככה שלא תצטרך להעביר node כInput
 	def _update_height(self, node):
 		node.height = 1 + max(node.left.height, node.right.height)
-
-	def _update_size(self, node):
-		node.size = 1 + node.left.size + node.right.size
 
 	def _balance_factor(self, node):
 		return node.left.height - node.right.height
@@ -113,8 +109,6 @@ class AVLTree(object):
 
 		self._update_height(x)
 		self._update_height(y)
-		self._update_size(x)
-		self._update_size(y)
 
 	def _rotate_right(self, x):
 		y = x.left
@@ -135,8 +129,6 @@ class AVLTree(object):
 
 		self._update_height(x)
 		self._update_height(y)
-		self._update_size(x)
-		self._update_size(y)
 
 	def _rebalance(self, node): # got modified to always go up to the root - critical in case of deletions (cost is still logn)
 		promotes = 0
@@ -144,7 +136,6 @@ class AVLTree(object):
 		while node is not None:
 			old_height = node.height
 			self._update_height(node)
-			self._update_size(node)
 
 			if node.height > old_height:
 				promotes += 1
@@ -275,6 +266,7 @@ class AVLTree(object):
 			self.max = new_node
 
 		promotes = self._rebalance(parent)
+		self.size += 1
 
 		return new_node, edges, promotes
 
@@ -376,6 +368,7 @@ class AVLTree(object):
 				child.parent = parent
 
 		self._rebalance(parent)
+		self.size -= 1
 
 	
 	"""joins self with item and another AVLTree
@@ -390,6 +383,9 @@ class AVLTree(object):
 	or the opposite way
 	"""
 	def join(self, tree2, key, val):
+
+
+		self.size = self.size + 1 + tree2.size
 		return
 
 
@@ -404,6 +400,8 @@ class AVLTree(object):
 	dictionary larger than node.key.
 	"""
 	def split(self, node):
+
+		# explicitly told to not care about size update
 		return None, None
 
 	
@@ -420,7 +418,7 @@ class AVLTree(object):
 
 		array = []
 		while curr_node != None:
-			array.append(curr_node)
+			array.append((curr_node.key, curr_node.value))
 			curr_node = curr_node.successor()
 		return array
 
@@ -439,7 +437,7 @@ class AVLTree(object):
 	@returns: the number of items in dictionary 
 	"""
 	def size(self):
-		return self.root.size
+		return self.size
 
 
 	"""returns the root of the tree representing the dictionary

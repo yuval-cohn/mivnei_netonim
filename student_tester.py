@@ -94,24 +94,24 @@ class BasicStudentTester(unittest.TestCase):
 #   Custom Test Runner
 # ------------------------
 
-if __name__ == "__main__":
-    print("Running Student Tester...\n")
 
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(BasicStudentTester)
-    result = unittest.TextTestRunner(verbosity=0).run(suite)
+print("Running Student Tester...\n")
 
-    print("\n==============================")
-    print("       TESTER SUMMARY")
-    print("==============================")
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(BasicStudentTester)
+result = unittest.TextTestRunner(verbosity=0).run(suite)
 
-    if result.failures or result.errors:
-        print("\n❌ Failed Tests:")
-        for test, err in result.failures + result.errors:
-            test_name = test.id().split(".")[-1]
-            print(f"  - {test_name}")
-            print(f"    {err.splitlines()[-1]}")
-    else:
-        print("\n✅ All tests passed!")
+print("\n==============================")
+print("       TESTER SUMMARY")
+print("==============================")
 
-    print("\nGrade:", GRADE, "/", MAX_GRADE)
-    print("==============================")
+if result.failures or result.errors:
+    print("\n❌ Failed Tests:")
+    for test, err in result.failures + result.errors:
+        test_name = test.id().split(".")[-1]
+        print(f"  - {test_name}")
+        print(f"    {err.splitlines()[-1]}")
+else:
+    print("\n✅ All tests passed!")
+
+print("\nGrade:", GRADE, "/", MAX_GRADE)
+print("==============================")
