@@ -466,6 +466,7 @@ class AVLTree(object):
 			self._rebalance(node)
 
 		self.max = right_tree.max
+		self.size = self.size + 1 + tree2.size
 		return
 
 
