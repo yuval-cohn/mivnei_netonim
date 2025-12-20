@@ -34,7 +34,7 @@ class AVLNode(object):
 
 	# פונקציה נחמדה שתאפשר להשוות נודים באמצעות אופרטור
 	def __eq__(self, other):
-		return self.key == other.key
+		return isinstance(other, AVLNode) and self.key == other.key
 
 
 	"""returns whether self is not a virtual node 
@@ -203,7 +203,7 @@ class AVLTree(object):
 		node = self.max
 		edges = 0
 
-		if not node.is_real_node() or node is None:
+		if node is None or not node.is_real_node():
 			return None, -1
 		if key > node.key:
 			return None, -1
