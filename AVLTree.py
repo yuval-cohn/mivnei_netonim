@@ -388,6 +388,7 @@ class AVLTree(object):
 			tree2.insert(key, val)
 			self.root = tree2.root
 			self.max = tree2.max
+			self.size = tree2.size
 			return
 
 		# tree2 is empty tree
