@@ -333,7 +333,7 @@ class AVLTree(object):
 	"""
 	def delete(self, node: AVLNode):
 		if node is None or not node.is_real_node():
-			return None
+			return
 		
 		# update max if needed (if we are about to delete max)
 		if self.max == node:
@@ -383,9 +383,89 @@ class AVLTree(object):
 	or the opposite way
 	"""
 	def join(self, tree2, key, val):
+		# self is empty tree
+		if not self.root.is_real_node():
+			tree2.insert(key, val)
+			self.root = tree2.root
+			self.max = tree2.max
+			return
 
+		# tree2 is empty tree
+		if not tree2.root.is_real_node():
+			self.insert(key, val)
+			return
+		
+		# define left_tree < key < right_tree
+		if key > self.root.key:
+			left_tree = self.root
+			right_tree = tree2.root
+		else: 
+			left_tree = tree2.root
+			right_tree = self.root
 
-		self.size = self.size + 1 + tree2.size
+		# self and tree2 have the same height
+		if left_tree.root.height == right_tree.root.height:
+			new_root = AVLNode(key, val)
+			new_root.left = left_tree.root
+			new_root.right = right_tree.root
+			left_tree.root.parent = new_root
+			right_tree.root.parent = new_root
+
+			self.root = new_root
+			self._update_height(new_root)
+			self._rebalance(new_root)
+		
+		#     \
+		#      L
+		#	    \
+		#	     k
+		#	    / \
+		#	  L.r  R
+		elif left_tree.root.height > right_tree.root.height:
+			node = left_tree.root
+			while node.right.height > right_tree.root.height:
+				node = node.right
+
+			new_node = AVLNode(key, val)
+			new_node.left = node.right
+			new_node.right = right_tree.root
+
+			if new_node.left.is_real_node():
+				new_node.left.parent = new_node
+			right_tree.root.parent = new_node
+
+			node.right = new_node
+			new_node.parent = node
+
+			self.root = left_tree.root
+			self._rebalance(node)
+
+		#            /
+		#           R
+		#		   /
+		#		  k
+		#		 / \
+		#		L  R.l
+		else:
+			node = right_tree.root
+			while node.left.height > left_tree.root.height:
+				node = node.left
+
+			new_node = AVLNode(key, val)
+			new_node.right = node.left
+			new_node.left = left_tree.root
+
+			if new_node.right.is_real_node():
+				new_node.right.parent = new_node
+			left_tree.root.parent = new_node
+
+			node.left = new_node
+			new_node.parent = node
+
+			self.root = right_tree.root
+			self._rebalance(node)
+
+		self.max = right_tree.max
 		return
 
 
@@ -400,9 +480,56 @@ class AVLTree(object):
 	dictionary larger than node.key.
 	"""
 	def split(self, node):
+		left_tree = AVLTree()
+		right_tree = AVLTree()
 
-		# explicitly told to not care about size update
-		return None, None
+		if node.left.is_real_node():
+			left_tree.root = node.left
+			left_tree.root.parent = None
+
+		if node.right.is_real_node():
+			right_tree.root = node.right
+			right_tree.root.parent = None
+
+		# Walk upward and rebuild
+		curr = node
+		parent = curr.parent
+
+		while parent is not None:
+			# curr is a left child
+			if curr == parent.left:
+				temp = AVLTree()
+				if parent.right.is_real_node():
+					temp.root = parent.right
+					temp.root.parent = None
+
+				temp.join(right_tree, parent.key, parent.value)
+				right_tree = temp
+
+			# curr is a right child
+			else:
+				temp = AVLTree()
+				if parent.left.is_real_node():
+					temp.root = parent.left
+					temp.root.parent = None
+
+				left_tree.join(temp, parent.key, parent.value)
+
+			curr = parent
+			parent = parent.parent
+
+		# Update max
+		if left_tree.root.is_real_node():
+			left_tree.max = left_tree.root
+			while left_tree.max.right.is_real_node():
+				left_tree.max = left_tree.max.right
+
+		if right_tree.root.is_real_node():
+			right_tree.max = right_tree.root
+			while right_tree.max.right.is_real_node():
+				right_tree.max = right_tree.max.right
+
+		return left_tree, right_tree
 
 	
 	"""returns an array representing dictionary 
