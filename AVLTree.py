@@ -24,11 +24,13 @@ class AVLNode(object):
 			self.right: AVLNode = AVLNode()
 			self.left.parent = self
 			self.right.parent = self
-			self.height = 0 
+			self.height = 0
+			self.size = 1
 		else:
 			self.left = None
 			self.right = None
-			self.height = -1 
+			self.height = -1
+			self.size = 0
 		self.parent = None
 
 
@@ -67,16 +69,6 @@ class AVLNode(object):
 				curr_node = curr_node.parent
 		return curr_node
 
-	def replace(self, other):
-		self.key = other.key
-		self.value = other.value
-		self.right = other.right
-		self.left = other.left
-		self.height = other.height
-		if other.is_real_node():
-			self.right.parent = self
-			self.left.parent = self
-
 """
 A class implementing an AVL tree.
 """
@@ -95,6 +87,9 @@ class AVLTree(object):
 	# עדיף להעביר לNodeAVL ככה שלא תצטרך להעביר node כInput
 	def _update_height(self, node):
 		node.height = 1 + max(node.left.height, node.right.height)
+
+	def _update_size(self, node):
+		node.size = 1 + node.left.size + node.right.size
 
 	def _balance_factor(self, node):
 		return node.left.height - node.right.height
@@ -118,6 +113,8 @@ class AVLTree(object):
 
 		self._update_height(x)
 		self._update_height(y)
+		self._update_size(x)
+		self._update_size(y)
 
 	def _rotate_right(self, x):
 		y = x.left
@@ -138,6 +135,8 @@ class AVLTree(object):
 
 		self._update_height(x)
 		self._update_height(y)
+		self._update_size(x)
+		self._update_size(y)
 
 	def _rebalance(self, node): # got modified to always go up to the root - critical in case of deletions (cost is still logn)
 		promotes = 0
@@ -145,6 +144,7 @@ class AVLTree(object):
 		while node is not None:
 			old_height = node.height
 			self._update_height(node)
+			self._update_size(node)
 
 			if node.height > old_height:
 				promotes += 1
@@ -377,31 +377,6 @@ class AVLTree(object):
 
 		self._rebalance(parent)
 
-		"""
-
-		if node.right.is_real_node():
-			successor = node.successor()
-
-			# detaching successor from tree and replacing node with successor
-			node.replace(successor)
-			successor_parent = successor.parent
-			successor_parent.right.replace(successor.left)
-			successor.replace(successor.right)
-			self._rebalance(successor_parent)
-
-
-		elif node.left.is_real_node():
-			node.replace(node.left)
-			self._rebalance(node)
-
-
-		# deleted node is a leaf
-		else:
-			node.replace(AVLNode())
-			self._rebalance(node.parent)
-		
-		"""
-
 	
 	"""joins self with item and another AVLTree
 
@@ -438,7 +413,15 @@ class AVLTree(object):
 	@returns: a sorted list according to key of touples (key, value) representing the data structure
 	"""
 	def avl_to_array(self):
-		return None
+		# go to the left node on the tree
+		curr_node = self.root
+		while curr_node.left.is_real_node():
+			curr_node = curr_node.left
+
+		array = []
+		while curr_node != None:
+			array.append(curr_node)
+			curr_node = curr_node.successor()
 
 
 	"""returns the node with the maximal key in the dictionary
@@ -447,7 +430,7 @@ class AVLTree(object):
 	@returns: the maximal node, None if the dictionary is empty
 	"""
 	def max_node(self):
-		return None
+		return self.max
 
 	"""returns the number of items in dictionary 
 
@@ -455,7 +438,7 @@ class AVLTree(object):
 	@returns: the number of items in dictionary 
 	"""
 	def size(self):
-		return -1	
+		return self.root.size
 
 
 	"""returns the root of the tree representing the dictionary
@@ -464,4 +447,4 @@ class AVLTree(object):
 	@returns: the root, None if the dictionary is empty
 	"""
 	def get_root(self):
-		return None
+		return self.root
