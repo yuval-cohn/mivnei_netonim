@@ -340,6 +340,45 @@ class AVLTree(object):
 	@pre: node is a real pointer to a node in self
 	"""
 	def delete(self, node: AVLNode):
+		if node is None or not node.is_real_node():
+			return None
+		
+		# update max if needed (if we are about to delete max)
+		if self.max == node:
+			if node.left.is_real_node():
+				self.max = node.left
+				while self.max.right.is_real_node():
+					self.max = self.max.right
+			else:
+				self.max = node.parent
+
+		# case 1: node has two real children
+		if node.left.is_real_node() and node.right.is_real_node():
+			succ = node.successor()
+			node.key = succ.key
+			node.value = succ.value
+			node = succ  # now delete successor instead
+
+		# case 2 and 3: node has one real child or none
+		child = node.left if node.left.is_real_node() else node.right
+		parent = node.parent
+
+		if parent is None:
+			self.root = child
+			if child.is_real_node():
+				child.parent = None
+		else:
+			if parent.left == node:
+				parent.left = child
+			else:
+				parent.right = child
+			if child.is_real_node():
+				child.parent = parent
+
+		self._rebalance(parent)
+
+		"""
+
 		if node.right.is_real_node():
 			successor = node.successor()
 
@@ -360,12 +399,8 @@ class AVLTree(object):
 		else:
 			node.replace(AVLNode())
 			self._rebalance(node.parent)
-
-
-
-
-
-
+		
+		"""
 
 	
 	"""joins self with item and another AVLTree
