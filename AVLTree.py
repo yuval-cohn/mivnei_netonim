@@ -422,6 +422,7 @@ class AVLTree(object):
 		while curr_node != None:
 			array.append(curr_node)
 			curr_node = curr_node.successor()
+		return array
 
 
 	"""returns the node with the maximal key in the dictionary
