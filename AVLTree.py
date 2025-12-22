@@ -539,13 +539,18 @@ class AVLTree(object):
 	@returns: a sorted list according to key of touples (key, value) representing the data structure
 	"""
 	def avl_to_array(self):
+
+		# in case tree is empty
+		if self.root.key is None:
+			return []
+
 		# go to the left node on the tree
 		curr_node = self.root
 		while curr_node.left.is_real_node():
 			curr_node = curr_node.left
 
 		array = []
-		while curr_node != None:
+		while curr_node is not None:
 			array.append((curr_node.key, curr_node.value))
 			curr_node = curr_node.successor()
 		return array
