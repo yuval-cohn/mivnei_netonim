@@ -79,7 +79,7 @@ class AVLTree(object):
 	def __init__(self):
 		self.root = AVLNode(None, None)
 		self.max = None
-		self.size = 0
+		self._size = 0
 
 
 	# custom functions
@@ -266,7 +266,7 @@ class AVLTree(object):
 			self.max = new_node
 
 		promotes = self._rebalance(parent)
-		self.size += 1
+		self._size += 1
 
 		return new_node, edges, promotes
 
@@ -368,7 +368,7 @@ class AVLTree(object):
 				child.parent = parent
 
 		self._rebalance(parent)
-		self.size -= 1
+		self._size -= 1
 
 	
 	"""joins self with item and another AVLTree
@@ -385,10 +385,10 @@ class AVLTree(object):
 	def join(self, tree2, key, val):
 		# self is empty tree
 		if not self.root.is_real_node():
-			tree2.insert(key, val)
 			self.root = tree2.root
 			self.max = tree2.max
-			self.size = tree2.size
+			self._size = tree2._size
+			self.insert(key, val)
 			return
 
 		# tree2 is empty tree
@@ -398,11 +398,11 @@ class AVLTree(object):
 		
 		# define left_tree < key < right_tree
 		if key > self.root.key:
-			left_tree = self.root
-			right_tree = tree2.root
+			left_tree = self
+			right_tree = tree2
 		else: 
-			left_tree = tree2.root
-			right_tree = self.root
+			left_tree = tree2
+			right_tree = self
 
 		# self and tree2 have the same height
 		if left_tree.root.height == right_tree.root.height:
@@ -467,7 +467,7 @@ class AVLTree(object):
 			self._rebalance(node)
 
 		self.max = right_tree.max
-		self.size = self.size + 1 + tree2.size
+		self._size = self._size + 1 + tree2._size
 		return
 
 
@@ -571,7 +571,7 @@ class AVLTree(object):
 	@returns: the number of items in dictionary 
 	"""
 	def size(self):
-		return self.size
+		return self._size
 
 
 	"""returns the root of the tree representing the dictionary
