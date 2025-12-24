@@ -236,9 +236,11 @@ class AVLTree(object):
 	"""
 
 	def insert(self, key, val):
+		# print(f'inserting key {key} with value {val}')
 		if not self.root.is_real_node():
 			self.root = AVLNode(key, val)
 			self.max = self.root
+			self._size = 1
 			return self.root, 0, 0
 
 		node = self.root
