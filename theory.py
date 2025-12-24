@@ -3,12 +3,15 @@ import random
 from AVLTree import AVLTree
 
 
-def array_to_tree(iter)-> tuple[AVLTree, int]:
+def array_to_tree(iter)-> tuple[AVLTree, int, int]:
     tree = AVLTree()
-    total_cost = 0
+    balance_cost = 0
+    search_cost = 0
     for item in iter:
-        total_cost += tree.finger_insert(item, item)[2]
-    return tree, total_cost
+        res = tree.finger_insert(item, item)
+        balance_cost += res[2]
+        search_cost += res[1]
+    return tree, search_cost, balance_cost
 
 
 def generate_sorted_array(length):
@@ -53,10 +56,7 @@ def test_search_array_average_cost(array_create_func, scale, reps=1):
     for i in range(scale+1):
         cost = 0
         for j in range(reps):
-            array = array_create_func(300*2**i)
-            item_to_search = random.choice(array)
-            tree = array_to_tree(array)[0]
-            cost += tree.finger_search(item_to_search)[1] / reps
+            cost += array_to_tree(array_create_func(300*2**i))[1] / reps
         print(i, cost)
 
 
@@ -102,6 +102,12 @@ def test2():
     test(test_average_switches_array, 5, 1, 20)
 
 def test3():
-    test(test_search_array_average_cost, 5, 20, 20)
+    test(test_search_array_average_cost, 5, 1, 20)
 
+
+print("test1")
+test1()
+print("test2")
+test2()
+print("test3")
 test3()
