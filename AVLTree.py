@@ -20,8 +20,8 @@ class AVLNode(object):
 		self.key = key
 		self.value = value
 		if key is not None:
-			self.left: AVLNode = AVLNode()
-			self.right: AVLNode = AVLNode()
+			self.left = AVLNode()
+			self.right = AVLNode()
 			self.left.parent = self
 			self.right.parent = self
 			self.height = 0
@@ -60,7 +60,7 @@ class AVLNode(object):
 		else:
 			prev_node = curr_node
 			curr_node = curr_node.parent
-			while curr_node.key != None:
+			while curr_node != None and curr_node.is_real_node():
 				if curr_node.left == prev_node:
 					return curr_node
 				prev_node = curr_node
@@ -179,7 +179,7 @@ class AVLTree(object):
 			else:
 				node = node.right
 			edges += 1
-		return None, -1
+		return None, edges + 1
 
 
 	"""searches for a node in the dictionary corresponding to the key, starting at the max
@@ -191,13 +191,13 @@ class AVLTree(object):
 	and e is the number of edges on the path between the starting node and ending node+1.
 	"""
 	def finger_search(self, key):
+		if self.max is None:
+			return None, 1
 		node = self.max
 		edges = 0
 
 		if node is None or not node.is_real_node():
-			return None, -1
-		if key > node.key:
-			return None, -1
+			return None, 1
 		if key == node.key:
 			return node, 1
 		
@@ -218,7 +218,7 @@ class AVLTree(object):
 				node = node.right
 			edges += 1
 
-		return None, -1
+		return None, edges + 1
 
 
 
@@ -322,6 +322,8 @@ class AVLTree(object):
 		if key > self.max.key:
 			self.max = new_node
 
+		self._size += 1
+
 		promotes = self._rebalance(parent)
 
 		return new_node, edges, promotes
@@ -347,7 +349,47 @@ class AVLTree(object):
 		
 		if not self.is_node_in_tree(node):
 			return   
-		
+
+		# case 1: node has two real children
+		if node.left.is_real_node() and node.right.is_real_node():
+			succ = node.successor()
+			
+			succ_parent = succ.parent
+			succ_is_direct_child = (succ_parent == node)
+			
+			succ_right_child = succ.right 
+			
+			if not succ_is_direct_child:
+				succ_parent.left = succ_right_child 
+				if succ_right_child.is_real_node():
+					succ_right_child.parent = succ_parent
+				
+				succ.right = node.right
+				node.right.parent = succ
+
+			succ.left = node.left
+			node.left.parent = succ
+			
+			succ.parent = node.parent
+			if node.parent is None:
+				self.root = succ
+			elif node.parent.left == node:
+				node.parent.left = succ
+			else:
+				node.parent.right = succ
+			
+			succ.height = node.height 
+			
+			rebalance_start = succ if succ_is_direct_child else succ_parent
+			
+			node.parent = None
+			node.left = None
+			node.right = None
+			
+			self._rebalance(rebalance_start)
+			self._size -= 1
+			return 
+
 		# update max if needed (if we are about to delete max)
 		if self.max == node:
 			if node.left.is_real_node():
@@ -356,13 +398,6 @@ class AVLTree(object):
 					self.max = self.max.right
 			else:
 				self.max = node.parent
-
-		# case 1: node has two real children
-		if node.left.is_real_node() and node.right.is_real_node():
-			succ = node.successor()
-			node.key = succ.key
-			node.value = succ.value
-			node = succ  # now delete successor instead
 
 		# case 2 and 3: node has one real child or none
 		child = node.left if node.left.is_real_node() else node.right
@@ -495,14 +530,16 @@ class AVLTree(object):
 	dictionary larger than node.key.
 	"""
 	def split(self, node):
+		if node == None or not isinstance(node, AVLNode):
+			return AVLTree(), AVLTree()
 		left_tree = AVLTree()
 		right_tree = AVLTree()
 
-		if node.left.is_real_node():
+		if node.left != None and node.left.is_real_node():
 			left_tree.root = node.left
 			left_tree.root.parent = None
 
-		if node.right.is_real_node():
+		if node.right != None and node.right.is_real_node():
 			right_tree.root = node.right
 			right_tree.root.parent = None
 
@@ -593,4 +630,6 @@ class AVLTree(object):
 	@returns: the root, None if the dictionary is empty
 	"""
 	def get_root(self):
+		if self.root is None or not self.root.is_real_node():
+			return None
 		return self.root
